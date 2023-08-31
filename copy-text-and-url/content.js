@@ -13,6 +13,5 @@ function copyToClipboard(html, plainText) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'copyToClipboard') {
     copyToClipboard(request.html, request.plainText);
-    sendResponse({ status: 'copied' });
   }
 });

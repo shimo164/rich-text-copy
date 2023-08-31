@@ -1,19 +1,24 @@
 {
 	"manifest_version": 3,
-	"name": "Copy Text & URL",
+	"name": "Rich Text Copy",
 	"version": "1.0",
-	"description": "Copy selected text and URL",
+	"description": "Copy selected text as rich-text hyperlink",
 	"permissions": [
 		"activeTab",
-		"clipboardWrite",
 		"contextMenus",
-		"tabs",
 		"scripting"
-	],
-	"host_permissions": [
-		"<all_urls>"
 	],
 	"background": {
 		"service_worker": "background.js"
-	}
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"<all_urls>"
+			],
+			"js": [
+				"content.js"
+			]
+		}
+	]
 }
