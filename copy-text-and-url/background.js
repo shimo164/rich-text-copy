@@ -1,3 +1,7 @@
+function isValidUrl(url) {
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: 'rich-text-style',
@@ -10,6 +14,7 @@ const copySelectedText = (info, tab) => {
   const text = info?.selectionText;
   const url = tab.url;
 
+  if (!isValidUrl(url)) return;
   if (!text) return;
 
   if (info.menuItemId === 'rich-text-style' || !info) {
@@ -43,6 +48,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.action.onClicked.addListener((tab) => {
+  const url = tab.url;
+
+  if (!isValidUrl(url)) return;
+
   chrome.scripting.executeScript({
     target: { tabId: tab.id },
     files: ['getSelection.js'],
