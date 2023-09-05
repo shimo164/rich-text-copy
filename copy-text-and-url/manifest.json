@@ -14,7 +14,8 @@
 	"content_scripts": [
 		{
 			"matches": [
-				"<all_urls>"
+				"http://*/*",
+				"https://*/*"
 			],
 			"js": [
 				"content.js"
@@ -27,7 +28,8 @@
 				"getSelection.js"
 			],
 			"matches": [
-				"<all_urls>"
+				"http://*/*",
+				"https://*/*"
 			]
 		}
 	],
