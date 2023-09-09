@@ -1,6 +1,5 @@
 # Rich Text Copy
 
-## Short Description
 "Rich Text Copy" is a Chrome extension that enables users to quickly copy selected text as a rich-text hyperlink. With just a simple right-click, transform your text selections into clickable links ready for sharing.
 
 ## How to Use
@@ -16,3 +15,11 @@
 
 4. **Paste Anywhere**:
    Paste the copied content into any platform that supports rich text, like Slack, Microsoft Teams, etc. The text will appear as a hyperlink pointing back to the original page. If the platform doesn't support rich text, only the selected text will be pasted.
+
+# How to install
+
+- Download the folder of change-website-lang/.
+- Go to chrome://extensions/, turn on Developer mode.
+- Click Load unpacked
+- Find and select the folder
+- See https://support.google.com/chrome/a/answer/2714278?hl=en
