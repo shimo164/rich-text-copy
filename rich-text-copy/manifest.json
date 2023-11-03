@@ -6,7 +6,8 @@
 	"permissions": [
 		"activeTab",
 		"contextMenus",
-		"scripting"
+		"scripting",
+		"storage"
 	],
 	"background": {
 		"service_worker": "background.js"
@@ -33,6 +34,7 @@
 			]
 		}
 	],
+	"options_page": "options.html",
 	"action": {
 		"default_title": "Copy"
 	},

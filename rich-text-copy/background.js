@@ -1,6 +1,6 @@
-function isValidUrl(url) {
+const isValidUrl = (url) => {
   return url.startsWith('http://') || url.startsWith('https://');
-}
+};
 
 const createContextMenuItem = (id, title) => {
   chrome.contextMenus.create({
@@ -11,29 +11,32 @@ const createContextMenuItem = (id, title) => {
 };
 
 chrome.runtime.onInstalled.addListener(() => {
-  createContextMenuItem('copy-as-rich-text', 'Copy as Rich Text');
-  createContextMenuItem('copy-as-markdown-link', 'Copy as markdown link');
+  chrome.storage.local.get(['richText', 'markdownLink'], function (items) {
+    if (items.richText !== false) {
+      createContextMenuItem('copy-as-rich-text', 'Copy as Rich Text');
+    }
+    if (items.markdownLink === true) {
+      createContextMenuItem('copy-as-markdown-link', 'Copy as Markdown Link');
+    }
+  });
 });
 
-const handleCopy = (info, tab) => {
-  const text = info?.selectionText;
+const copySelectedText = (info, tab) => {
+  const text = info.selectionText;
   const url = tab.url;
 
-  if (!(isValidUrl(url) && text)) return;
+  if (!isValidUrl(url) || !text) return;
 
-  let formattedContent;
   if (info.menuItemId === 'copy-as-rich-text') {
-    formattedContent = `<a href="${url}">${text}</a>`;
+    const html = `<a href="${url}">${text}</a>`;
+    sendToClipboard(html, text, tab.id);
   } else if (info.menuItemId === 'copy-as-markdown-link') {
-    formattedContent = `[${text}](${url})`;
-  }
-
-  if (formattedContent) {
-    copyToClipboard(formattedContent, text, tab.id);
+    const markdown = `[${text}](${url})`;
+    sendToClipboard(markdown, text, tab.id);
   }
 };
 
-const copyToClipboard = (content, plainText, tabId) => {
+const sendToClipboard = (content, plainText, tabId) => {
   chrome.scripting.executeScript(
     {
       target: { tabId: tabId },
@@ -49,22 +52,37 @@ const copyToClipboard = (content, plainText, tabId) => {
   );
 };
 
-chrome.runtime.onMessage.addListener((message, sender) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'selectedText') {
-    handleCopy(
-      { selectionText: message.data, menuItemId: 'copy-as-rich-text' },
+    const text = message.data;
+    copySelectedText(
+      { selectionText: text, menuItemId: 'copy-as-rich-text' },
       sender.tab,
     );
-  }
-});
-
-chrome.action.onClicked.addListener((tab) => {
-  if (isValidUrl(tab.url)) {
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['getSelection.js'],
+  } else if (message.action === 'updateContextMenu') {
+    chrome.contextMenus.removeAll(() => {
+      chrome.storage.local.get(['richText', 'markdownLink'], function (items) {
+        if (items.richText !== false) {
+          createContextMenuItem('copy-as-rich-text', 'Copy as Rich Text');
+        }
+        if (items.markdownLink === true) {
+          createContextMenuItem(
+            'copy-as-markdown-link',
+            'Copy as Markdown Link',
+          );
+        }
+      });
     });
   }
 });
 
-chrome.contextMenus.onClicked.addListener(handleCopy);
+chrome.action.onClicked.addListener((tab) => {
+  const url = tab.url;
+  if (!isValidUrl(url)) return;
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ['getSelection.js'],
+  });
+});
+
+chrome.contextMenus.onClicked.addListener(copySelectedText);
