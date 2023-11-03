@@ -1,7 +1,6 @@
-function copyToClipboard(html, plainText) {
+function copyToClipboard(text) {
   function listener(e) {
-    e.clipboardData.setData('text/html', html);
-    e.clipboardData.setData('text/plain', plainText);
+    e.clipboardData.setData('text/plain', text);
     e.preventDefault();
   }
 
@@ -12,6 +11,6 @@ function copyToClipboard(html, plainText) {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'copyToClipboard') {
-    copyToClipboard(request.html, request.plainText);
+    copyToClipboard(request.html || request.text);
   }
 });

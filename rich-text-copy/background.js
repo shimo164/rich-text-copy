@@ -2,60 +2,69 @@ function isValidUrl(url) {
   return url.startsWith('http://') || url.startsWith('https://');
 }
 
-chrome.runtime.onInstalled.addListener(() => {
+const createContextMenuItem = (id, title) => {
   chrome.contextMenus.create({
-    id: 'rich-text-style',
-    title: 'Copy as Rich Text',
+    id: id,
+    title: title,
     contexts: ['selection'],
   });
+};
+
+chrome.runtime.onInstalled.addListener(() => {
+  createContextMenuItem('copy-as-rich-text', 'Copy as Rich Text');
+  createContextMenuItem('copy-as-markdown-link', 'Copy as markdown link');
 });
 
-const copySelectedText = (info, tab) => {
+const handleCopy = (info, tab) => {
   const text = info?.selectionText;
   const url = tab.url;
 
-  if (!isValidUrl(url)) return;
-  if (!text) return;
+  if (!(isValidUrl(url) && text)) return;
 
-  if (info.menuItemId === 'rich-text-style' || !info) {
-    // The !info check will handle the case when invoked by the extension icon
-    const html = `<a href="${url}">${text}</a>`;
+  let formattedContent;
+  if (info.menuItemId === 'copy-as-rich-text') {
+    formattedContent = `<a href="${url}">${text}</a>`;
+  } else if (info.menuItemId === 'copy-as-markdown-link') {
+    formattedContent = `[${text}](${url})`;
+  }
 
-    chrome.scripting.executeScript(
-      {
-        target: { tabId: tab.id },
-        files: ['content.js'],
-      },
-      () => {
-        chrome.tabs.sendMessage(tab.id, {
-          action: 'copyToClipboard',
-          html: html,
-          plainText: text,
-        });
-      },
-    );
+  if (formattedContent) {
+    copyToClipboard(formattedContent, text, tab.id);
   }
 };
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+const copyToClipboard = (content, plainText, tabId) => {
+  chrome.scripting.executeScript(
+    {
+      target: { tabId: tabId },
+      files: ['content.js'],
+    },
+    () => {
+      chrome.tabs.sendMessage(tabId, {
+        action: 'copyToClipboard',
+        html: content,
+        plainText: plainText,
+      });
+    },
+  );
+};
+
+chrome.runtime.onMessage.addListener((message, sender) => {
   if (message.action === 'selectedText') {
-    const text = message.data;
-    copySelectedText(
-      { selectionText: text, menuItemId: 'rich-text-style' },
+    handleCopy(
+      { selectionText: message.data, menuItemId: 'copy-as-rich-text' },
       sender.tab,
     );
   }
 });
 
 chrome.action.onClicked.addListener((tab) => {
-  const url = tab.url;
-
-  if (!isValidUrl(url)) return;
-
-  chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ['getSelection.js'],
-  });
+  if (isValidUrl(tab.url)) {
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['getSelection.js'],
+    });
+  }
 });
 
-chrome.contextMenus.onClicked.addListener(copySelectedText);
+chrome.contextMenus.onClicked.addListener(handleCopy);
