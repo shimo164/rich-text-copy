@@ -32,7 +32,7 @@ const copySelectedText = (info, tab) => {
     sendToClipboard(html, text, tab.id);
   } else if (info.menuItemId === 'copy-as-markdown-link') {
     const markdown = `[${text}](${url})`;
-    sendToClipboard(markdown, text, tab.id);
+    sendToClipboard(null, markdown, tab.id);
   }
 };
 
